@@ -1,0 +1,5 @@
+Script/.env
+build
+node_modules
+GanacheDetails.txt
+truffle-config.js
