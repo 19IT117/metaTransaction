@@ -16,36 +16,59 @@ module.exports = async () => {
     const ProxyABI = config2.abi;
     const ProxyInstance = new web3.eth.Contract(ProxyABI,ProxyAddress);
    
-    let value = 1150;
+    let value = 118;
     let calldata = '';
     let fnSignature = web3.utils.keccak256("changeX(uint256)").substr(0,10);
     
     let fnParams = web3.eth.abi.encodeParameters(['uint256'],[value]);
+    
     calldata = fnSignature+ fnParams.substr(2);
-    // console.log("calldata ---->",calldata);
+
+   // console.log("calldata ---->",calldata);
    
     let rawData = web3.eth.abi.encodeParameters(['address','bytes'],[DemoAddress,calldata]);
+    // console.log(rawData);
     let hash = web3.utils.soliditySha3(rawData);
-    
-    let Signature =await web3.eth.accounts.sign(hash, process.env.PV1);
-    // console.log("signature ---->",Signature.signature);
-    // const result = await web3.eth.accounts.recover(Signature);
-    // console.log("Recovering Address from signed message ----> ",result);     
+    // console.log("hash ---->",hash)
+    let Signature =await web3.eth.accounts.sign(hash, process.env.PV0);
+
+    console.log("signature ---->",Signature.signature);
+    const result = await web3.eth.accounts.recover(Signature);
+    console.log("Recovering Address from signed message ----> ",result);     
     const result1 = await DemoInstance.methods.x().call();
     console.log("value of X Before sending transaction ---> ",result1);
     let balance0 = await web3.eth.getBalance(accounts[0]);
     console.log("balance of account 0 Before sending transaction",balance0);    
     let balance1 = await web3.eth.getBalance(accounts[1]);
     console.log("balance of account 1 Before sending transaction",balance1); 
-    
-    await ProxyInstance.methods.forward(DemoAddress,calldata,Signature.signature).send({from : accounts[1]});
+
+
+    console.log('Way 1 -----> ');
+    const data = ProxyInstance.methods.forward(DemoAddress,calldata,Signature.signature).encodeABI();
+    const txObj = {
+        from : accounts[1],
+        to : ProxyAddress,
+        value : web3.utils.toWei('5','ether'),
+        data : data,
+        gasLimit : web3.utils.toHex(100000),
+        gasPrice : web3.utils.toHex(web3.utils.toWei('5','wei'))
+    }
+    await web3.eth.sendTransaction(txObj,{from : accounts[1]}).then(console.log);
+
 
     const result2 = await DemoInstance.methods.x().call();
     console.log("value of X after sending transaction ---> ",result2);
     balance0 = await web3.eth.getBalance(accounts[0]);
-    console.log("balance of account 0 Before sending transaction",balance0);    
+    console.log("balance of account 0 after sending transaction",balance0);    
     balance1 = await web3.eth.getBalance(accounts[1]);
-    console.log("balance of account 1 Before sending transaction",balance1); 
+    console.log("balance of account 1 after sending transaction",balance1); 
+    const msgSender = await DemoInstance.methods.sender().call();
+    console.log(msgSender);
+    const msgValue = await DemoInstance.methods.value().call();
+    console.log(msgValue);
+    const balanceC = await web3.eth.getBalance(DemoAddress);
+    console.log(balanceC);
+
 }
 
 

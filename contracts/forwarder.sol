@@ -9,15 +9,15 @@ contract Proxy {
   constructor(){
     owner = msg.sender;
   }
-  mapping(address => bool) private isWhitelisted;
+  mapping(address => bool) public isWhitelisted;
   
   // verify the data and execute the data at the target address
-  function forward(address _to, bytes calldata _data, bytes memory _signature) external returns (bytes memory _result) {
+  function forward(address _to, bytes calldata _data, bytes memory _signature) external payable returns (bytes memory _result) {
     bool success;
     
     verifySignature(_to, _data, _signature);
     
-    (success, _result) = _to.call(_data);
+    (success, _result) = _to.call{value: msg.value}(_data);
     if (!success) {
         // solhint-disable-next-line no-inline-assembly
         assembly {

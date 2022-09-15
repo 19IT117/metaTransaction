@@ -3,3 +3,5 @@ build
 node_modules
 GanacheDetails.txt
 truffle-config.js
+test/.env
+Script/script3.js
